@@ -64,17 +64,8 @@ namespace Gamu2059.render_pipeline.Shadowing {
                 cmd.GetTemporaryRT(RenderTarget, Screen.width, Screen.height, 32);
                 // 描画ライブラリで操作するレンダーテクスチャの切り替えリクエスト
                 cmd.SetRenderTarget(RenderTarget);
-                // レンダーテクスチャのクリアリクエスト
-                switch (camera.clearFlags) {
-                    case CameraClearFlags.Skybox:
-                    case CameraClearFlags.Depth:
-                        cmd.ClearRenderTarget(true, true, camera.backgroundColor, 1);
-                        break;
-                    case CameraClearFlags.SolidColor:
-                        cmd.ClearRenderTarget(true, true, camera.backgroundColor, 1);
-                        break;
-                }
-
+                // レンダーテクスチャの色と深度のクリアリクエスト
+                cmd.ClearRenderTarget(true, true, camera.backgroundColor, 1);
                 // レンダーテクスチャの取得とクリアの実行
                 context.ExecuteCommandBuffer(cmd);
 
@@ -90,20 +81,7 @@ namespace Gamu2059.render_pipeline.Shadowing {
                 context.DrawRenderers(cullingResults, ref opaqueDrawSettings, ref opaqueFilterSettings);
 
                 // Skyboxの描画
-                if (camera.clearFlags == CameraClearFlags.Skybox) {
-                    context.DrawSkybox(camera);
-                }
-
-                // 半透明描画のソートの仕方の指定
-                var transparentSortingSettings = new SortingSettings(camera) {criteria = SortingCriteria.CommonTransparent};
-                // 半透明描画の描画対象のパスとソートの仕方の指定
-                var transparentDrawSettings = new DrawingSettings(RenderTagId, transparentSortingSettings);
-                // 半透明描画の描画するRenderQueueの範囲の指定
-                var transparentRenderQueueRange = new RenderQueueRange((int) RenderQueue.GeometryLast + 1, (int) RenderQueue.Overlay);
-                // 半透明描画の描画するRenderQueueの範囲と描画対象のレイヤーの指定
-                var transparentFilterSettings = new FilteringSettings(transparentRenderQueueRange, camera.cullingMask);
-                // 半透明描画の実行
-                context.DrawRenderers(cullingResults, ref transparentDrawSettings, ref transparentFilterSettings);
+                context.DrawSkybox(camera);
 
                 // 以前のリクエストのクリア
                 cmd.Clear();
