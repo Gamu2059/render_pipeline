@@ -65,7 +65,7 @@ namespace Gamu2059.render_pipeline.Shadowing {
                 // 描画ライブラリで操作するレンダーテクスチャの切り替えリクエスト
                 cmd.SetRenderTarget(RenderTarget);
                 // レンダーテクスチャの色と深度のクリアリクエスト
-                cmd.ClearRenderTarget(true, true, camera.backgroundColor, 1);
+                cmd.ClearRenderTarget(true, false, camera.backgroundColor, 1);
                 // レンダーテクスチャの取得とクリアの実行
                 context.ExecuteCommandBuffer(cmd);
 
