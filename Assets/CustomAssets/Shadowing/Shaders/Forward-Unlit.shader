@@ -76,7 +76,6 @@
             }
 
             // ピクセルシェーダー
-            // 【重要】SV_Targetの指定忘れに注意
             half4 frag(Varyings i) : SV_Target
             {
                 // UV座標を使ってテクスチャの色を取得
