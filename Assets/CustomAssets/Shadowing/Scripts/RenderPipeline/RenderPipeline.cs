@@ -340,7 +340,7 @@ namespace Gamu2059.render_pipeline.Shadowing {
             cmd.GetTemporaryRT(LightShadow, shadowResolution, shadowResolution, 32, FilterMode.Bilinear,
                 RenderTextureFormat.RFloat);
             cmd.SetRenderTarget(LightShadowId);
-            cmd.ClearRenderTarget(true, true, Color.black, 1);
+            cmd.ClearRenderTarget(true, true, Color.white, 1);
             context.ExecuteCommandBuffer(cmd);
         }
 
