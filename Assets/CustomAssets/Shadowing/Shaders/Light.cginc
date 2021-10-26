@@ -45,6 +45,16 @@ float4 TransformObjectToLightViewProjection(float3 positionOS)
     return mul(_LightVP, mul(unity_ObjectToWorld, float4(positionOS, 1)));
 }
 
+float CalcLightViewProjectionDepth(float4 positionLVP)
+{
+    float depth = positionLVP.z / positionLVP.w;
+    #if UNITY_REVERSED_Z
+    return 1 - depth;
+    #else
+    return depth;
+    #endif
+}
+
 /// <summary>
 /// シャドウによるライトの減衰度を取得する
 /// </summary>
@@ -61,13 +71,13 @@ float GetShadowAttenuation(float4 positionWS, float dotNL)
     float distanceSqrt = dot(positionVS, positionVS);
 
     // ピクセルがある位置のLVP空間上の深度を取得する
-    float zInLVP = positionLVP.z / positionLVP.w;
+    float zInLVP = CalcLightViewProjectionDepth(positionLVP);
     // シャドウマップに書き込まれている位置のLVP空間上の深度を取得する
     float zInShadow = tex2D(_LightShadow, uv).x;
     // シャドウバイアスを求める
     float bias = _ShadowNormalBias * tan(acos(dotNL)) + _ShadowBias;
     // ピクセルがある位置がシャドウマップに書き込まれている位置よりも奥なら影になる
-    float attenuation = zInLVP + bias < zInShadow ? 0 : 1;
+    float attenuation = zInLVP - bias > zInShadow ? 0 : 1;
 
     // UV座標がシャドウマップ範囲外、またはシャドウ投影範囲外なら、強制的に影にさせない
     return uv.x > 0 && uv.x < 1 && uv.y > 0 && uv.y < 1 && distanceSqrt <= _ShadowDistanceSqrt ? attenuation : 1;

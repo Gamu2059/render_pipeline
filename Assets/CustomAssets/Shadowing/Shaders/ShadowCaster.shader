@@ -42,7 +42,7 @@ Shader "Hidden/Gamu2059/Shadowing/ShadowCaster"
             float frag(Varyings i) : SV_Target
             {
                 // ピクセルがある位置のLVP空間上の深度をシャドウマップに書き込む
-                return i.positionLVP.z / i.positionLVP.w;
+                return CalcLightViewProjectionDepth(i.positionLVP);
             }
             ENDHLSL
         }
