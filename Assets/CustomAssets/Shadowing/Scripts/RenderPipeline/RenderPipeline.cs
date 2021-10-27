@@ -78,11 +78,6 @@ namespace Gamu2059.render_pipeline.Shadowing {
         private readonly int ShadowDistanceSqrt;
 
         /// <summary>
-        /// ライトのビュー行列
-        /// </summary>
-        private Matrix4x4 lightViewMatrix;
-
-        /// <summary>
         /// コンストラクタ
         /// </summary>
         public RenderPipeline(RenderPipelineAsset asset) {
@@ -133,9 +128,13 @@ namespace Gamu2059.render_pipeline.Shadowing {
                 if (existValidLight) {
                     // 1つ目のライトを取得
                     var lightIndex = lightIndexes[0];
+                    var light = cullingResults.visibleLights[lightIndex].light;
+
+                    // ライトビュープロジェクション行列の計算
+                    var lightVP = CalcLightViewProjection(cullingResults, lightIndex, shadowResolution);
                     
                     // ライトプロパティの設定
-                    SetupLightProperties(context, cmd, cullingResults, lightIndex, shadowResolution, shadowDistance);
+                    SetupLightProperties(context, cmd, light, lightVP, shadowDistance);
 
                     // シャドウマップ用レンダーテクスチャのセットアップ
                     SetupLightRT(context, cmd, shadowResolution);
@@ -204,7 +203,7 @@ namespace Gamu2059.render_pipeline.Shadowing {
                 return false;
             }
 
-            cullingParameters.shadowDistance = shadowDistance;
+            cullingParameters.shadowDistance = Mathf.Clamp(shadowDistance, camera.nearClipPlane, camera.farClipPlane);
             cullingResults = context.Cull(ref cullingParameters);
             return true;
         }
@@ -279,12 +278,11 @@ namespace Gamu2059.render_pipeline.Shadowing {
         }
 
         /// <summary>
-        /// ライトプロパティの設定(ViewProjection行列、ライトパラメータの設定など)
+        /// ライトビュープロジェクション行列の計算
         /// </summary>
-        /// <param name="lightIndex">プロパティを設定するライトのインデックス</param>
+        /// <param name="lightIndex">ライトのインデックス</param>
         /// <param name="shadowResolution">シャドウマップの解像度</param>
-        /// <param name="shadowDistance">シャドウを投影する最大距離</param>
-        private void SetupLightProperties(ScriptableRenderContext context, CommandBuffer cmd, CullingResults cullingResults, int lightIndex, int shadowResolution, float shadowDistance) {
+        private Matrix4x4 CalcLightViewProjection(CullingResults cullingResults, int lightIndex, int shadowResolution) {
             var light = cullingResults.visibleLights[lightIndex].light;
 
             // ライトのビュー行列とプロジェクション行列を取得する
@@ -295,16 +293,27 @@ namespace Gamu2059.render_pipeline.Shadowing {
                 Vector3.zero,
                 shadowResolution,
                 light.shadowNearPlane,
-                out lightViewMatrix,
+                out var viewMatrix,
                 out var projMatrix,
                 out var shadowSplitData);
 
             // プロジェクション行列を描画ライブラリに適合した状態にする
             projMatrix = GL.GetGPUProjectionMatrix(projMatrix, true);
 
+            // ビュー行列とプロジェクション行列を乗算して返す
+            return projMatrix * viewMatrix;
+        }
+
+        /// <summary>
+        /// ライトプロパティの設定(ViewProjection行列、ライトパラメータの設定など)
+        /// </summary>
+        /// <param name="light">プロパティを設定するライト</param>
+        /// <param name="lightVP">ライトビュープロジェクション行列</param>
+        /// <param name="shadowDistance">シャドウを投影する最大距離</param>
+        private void SetupLightProperties(ScriptableRenderContext context, CommandBuffer cmd, Light light, Matrix4x4 lightVP, float shadowDistance) {
             cmd.Clear();
             // LVP行列をシェーダーに送信
-            cmd.SetGlobalMatrix(LightVP, projMatrix * lightViewMatrix);
+            cmd.SetGlobalMatrix(LightVP, lightVP);
             // ライトの向きをシェーダーに送信
             cmd.SetGlobalVector(LightDir, -light.transform.forward);
             // ライトの色をシェーダーに送信
