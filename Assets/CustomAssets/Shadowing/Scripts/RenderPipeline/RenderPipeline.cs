@@ -126,11 +126,14 @@ namespace Gamu2059.render_pipeline.Shadowing {
                 // 視界内で有効なディレクショナルライトのインデックスを取得
                 var lightIndexes = SearchLightIndexes(cullingResults, LightType.Directional);
 
-                // ライトインデックスの0番目を取得
-                var succeedGetLightIndex = TryGetLightIndex(cullingResults, lightIndexes, 0, out var lightIndex);
+                // 有効なライトが存在するかどうか
+                var existValidLight = lightIndexes != null && lightIndexes.Count > 0;
 
-                // ライトインデックスの取得に成功していた時
-                if (succeedGetLightIndex) {
+                // 有効なライトが存在する時
+                if (existValidLight) {
+                    // 1つ目のライトを取得
+                    var lightIndex = lightIndexes[0];
+                    
                     // ライトプロパティの設定
                     SetupLightProperties(context, cmd, cullingResults, lightIndex, shadowResolution, shadowDistance);
 
@@ -156,8 +159,8 @@ namespace Gamu2059.render_pipeline.Shadowing {
                 // 描画用レンダーテクスチャのクリーンアップ
                 CleanupMainRT(context, cmd);
 
-                // ライトインデックスの取得に成功していた時
-                if (succeedGetLightIndex) {
+                // 有効なライトが存在する時
+                if (existValidLight) {
                     // シャドウマップ用レンダーテクスチャのクリーンアップ
                     CleanupLightRT(context, cmd);
                 }
@@ -264,30 +267,15 @@ namespace Gamu2059.render_pipeline.Shadowing {
                     continue;
                 }
 
+                // ライトに照らされる範囲にシャドウキャスターが存在しないならばスキップ
+                if (!cullingResults.GetShadowCasterBounds(i, out var bounds)) {
+                    continue;
+                }
+
                 lights.Add(i);
             }
 
             return lights;
-        }
-
-        /// <summary>
-        /// ライトのインデックスリストから、指定の場所にあるインデックスを取得する
-        /// </summary>
-        /// <param name="lightIndexes">ライトのインデックスリスト</param>
-        /// <param name="listIndex">ライトのインデックスリストの何番目のインデックスを取得したいか</param>
-        /// <param name="lightIndex">取得したいライトのインデックスリストの値(取得用)</param>
-        private bool TryGetLightIndex(CullingResults cullingResults, List<int> lightIndexes, int listIndex, out int lightIndex) {
-            lightIndex = -1;
-
-            // ライトのインデックスリストが無効ならば取得できない
-            if (lightIndexes == null || lightIndexes.Count < 1) {
-                return false;
-            }
-
-            lightIndex = lightIndexes[listIndex];
-
-            // カメラから見える範囲、かつ指定したライトに照らされる範囲にシャドウキャスターが存在するかどうか
-            return cullingResults.GetShadowCasterBounds(lightIndex, out var shadowBounds);
         }
 
         /// <summary>
