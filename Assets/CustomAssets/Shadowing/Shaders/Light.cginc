@@ -45,6 +45,9 @@ float4 TransformObjectToLightViewProjection(float3 positionOS)
     return mul(_LightVP, mul(unity_ObjectToWorld, float4(positionOS, 1)));
 }
 
+/// <summary>
+/// LVP空間の深度値を計算する
+/// </summary>
 float CalcLightViewProjectionDepth(float4 positionLVP)
 {
     float depth = positionLVP.z / positionLVP.w;
