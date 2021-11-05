@@ -259,6 +259,13 @@ namespace Gamu2059.render_pipeline.Shadowing {
                     continue;
                 }
 
+                var light = visibleLight.light;
+
+                // シャドウが無効ならばスキップ
+                if (light == null || light.shadows == LightShadows.None || light.shadowStrength <= 0) {
+                    continue;
+                }
+
                 // ライトに照らされる範囲にシャドウキャスターが存在しないならばスキップ
                 if (!cullingResults.GetShadowCasterBounds(i, out var bounds)) {
                     continue;
