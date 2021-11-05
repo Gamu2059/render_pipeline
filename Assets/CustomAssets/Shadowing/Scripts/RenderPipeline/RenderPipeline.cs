@@ -131,7 +131,7 @@ namespace Gamu2059.render_pipeline.Shadowing {
                     var light = cullingResults.visibleLights[lightIndex].light;
 
                     // ライトビュープロジェクション行列の計算
-                    var lightVP = CalcLightViewProjection(cullingResults, lightIndex, shadowResolution);
+                    var lightVP = CalcLightViewProjection(cullingResults, lightIndex);
                     
                     // ライトプロパティの設定
                     SetupLightProperties(context, cmd, light, lightVP, shadowDistance);
@@ -281,8 +281,7 @@ namespace Gamu2059.render_pipeline.Shadowing {
         /// ライトビュープロジェクション行列の計算
         /// </summary>
         /// <param name="lightIndex">ライトのインデックス</param>
-        /// <param name="shadowResolution">シャドウマップの解像度</param>
-        private Matrix4x4 CalcLightViewProjection(CullingResults cullingResults, int lightIndex, int shadowResolution) {
+        private Matrix4x4 CalcLightViewProjection(CullingResults cullingResults, int lightIndex) {
             var light = cullingResults.visibleLights[lightIndex].light;
 
             // ライトのビュー行列とプロジェクション行列を取得する
@@ -291,7 +290,7 @@ namespace Gamu2059.render_pipeline.Shadowing {
                 0,
                 1,
                 Vector3.zero,
-                shadowResolution,
+                0,
                 light.shadowNearPlane,
                 out var viewMatrix,
                 out var projMatrix,
